@@ -61,3 +61,16 @@ def test_parse_prefers_iso8601_over_epoch():
     result = parse_timestamp(line)
     assert result is not None
     assert result.year == 2024
+
+
+@pytest.mark.parametrize("line", [
+    "2024-01-15T13:45:00Z INFO server started",
+    "2024-01-15 13:45:00.456 DEBUG connection pool",
+    '192.168.1.1 - - [15/Jan/2024:13:45:00 +0000] "GET / HTTP/1.1" 200',
+    "1705326300 INFO epoch seconds log entry",
+])
+def test_parse_result_has_no_tzinfo(line):
+    """Parsed timestamps should be naive datetimes (no tzinfo attached)."""
+    result = parse_timestamp(line)
+    assert result is not None
+    assert result.tzinfo is None
