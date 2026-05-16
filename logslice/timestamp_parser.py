@@ -47,3 +47,33 @@ def parse_timestamp(line: str) -> Optional[datetime]:
         except (ValueError, OSError):
             continue
     return None
+
+
+def detect_timestamp_format(lines: list[str]) -> Optional[str]:
+    """Infer the most likely timestamp format from a sample of log lines.
+
+    Iterates through the provided lines and returns the regex pattern string
+    of the first format that successfully matches the majority of non-empty
+    lines, or None if no consistent format is found.
+
+    Args:
+        lines: A list of raw log line strings to sample.
+
+    Returns:
+        The regex pattern string of the detected format, or None.
+    """
+    if not lines:
+        return None
+
+    non_empty = [l for l in lines if l.strip()]
+    if not non_empty:
+        return None
+
+    threshold = max(1, len(non_empty) // 2)
+
+    for (regex, _fmt), (pattern, _) in zip(_COMPILED, TIMESTAMP_PATTERNS):
+        hits = sum(1 for line in non_empty if regex.search(line))
+        if hits >= threshold:
+            return pattern
+
+    return None
