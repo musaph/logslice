@@ -60,3 +60,21 @@ def read_lines(source: Union[str, io.IOBase], strip_newlines: bool = True) -> li
     Convenience wrapper around :func:`iter_lines`.
     """
     return list(iter_lines(source, strip_newlines=strip_newlines))
+
+
+def count_lines(source: Union[str, io.IOBase]) -> int:
+    """Return the total number of lines in *source*.
+
+    This is more memory-efficient than ``len(read_lines(source))`` because it
+    does not store all lines in memory at once.
+
+    Args:
+        source: A filesystem path (str) or a readable file-like object.
+
+    Returns:
+        The number of lines found in the source.
+    """
+    total = 0
+    for _ in iter_lines(source, strip_newlines=False):
+        total += 1
+    return total
