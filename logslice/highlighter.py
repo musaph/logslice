@@ -19,10 +19,16 @@ class HighlightOptions:
 
 
 def _build_pattern(keywords: List[str], case_sensitive: bool) -> Optional[re.Pattern]:
-    """Compile a combined regex pattern for all keywords."""
+    """Compile a combined regex pattern for all keywords.
+
+    Returns ``None`` if *keywords* is empty, which callers treat as
+    "match everything".
+    """
     if not keywords:
         return None
-    escaped = [re.escape(kw) for kw in keywords]
+    escaped = [re.escape(kw) for kw in keywords if kw]
+    if not escaped:
+        return None
     flags = 0 if case_sensitive else re.IGNORECASE
     return re.compile("(" + "|".join(escaped) + ")", flags)
 
