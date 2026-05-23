@@ -19,6 +19,11 @@ _LEVEL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Pre-computed canonical severity order (avoids recomputing in hot paths)
+_CANONICAL_ORDER = [_CANONICAL.get(l, l) for l in LEVEL_ORDER]
+# Deduplicated while preserving order for external use
+CANONICAL_LEVELS = list(dict.fromkeys(_CANONICAL_ORDER))
+
 
 def _canonical(level: str) -> str:
     """Return the canonical upper-case name for *level*."""
@@ -27,11 +32,13 @@ def _canonical(level: str) -> str:
 
 
 def _severity(level: str) -> int:
-    """Return a numeric severity for *level* (higher == more severe)."""
+    """Return a numeric severity for *level* (higher == more severe).
+
+    Returns ``-1`` if *level* is not recognised.
+    """
     canon = _canonical(level)
-    order = [_canonical(l) for l in LEVEL_ORDER]
     try:
-        return order.index(canon)
+        return _CANONICAL_ORDER.index(canon)
     except ValueError:
         return -1
 
@@ -89,3 +96,21 @@ def count_by_level(lines: Iterable[str]) -> dict[str, int]:
         if level:
             counts[level] = counts.get(level, 0) + 1
     return counts
+
+
+def highest_level(lines: Iterable[str]) -> Optional[str]:
+    """Return the canonical name of the most severe level found in *lines*.
+
+    Returns ``None`` if no recognisable level token is found in any line.
+    """
+    best_sev = -1
+    best_level: Optional[str] = None
+    for line in lines:
+        level = detect_level(line)
+        if level is None:
+            continue
+        sev = _severity(level)
+        if sev > best_sev:
+            best_sev = sev
+            best_level = level
+    return best_level
