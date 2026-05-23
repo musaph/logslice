@@ -6,6 +6,7 @@ maximum count, useful for previewing large log files.
 
 from __future__ import annotations
 
+from collections import deque
 from typing import Iterable, Iterator
 
 
@@ -78,9 +79,7 @@ def sample_tail(lines: Iterable[str], max_lines: int) -> list[str]:
         raise ValueError(f"max_lines must be >= 0, got {max_lines}")
     if max_lines == 0:
         return []
-    buffer: list[str] = []
-    for line in lines:
-        buffer.append(line)
-        if len(buffer) > max_lines:
-            buffer.pop(0)
-    return buffer
+    # deque with a fixed maxlen is O(1) for appends and automatic eviction,
+    # avoiding the O(n) cost of list.pop(0) in the previous implementation.
+    buffer: deque[str] = deque(lines, maxlen=max_lines)
+    return list(buffer)
