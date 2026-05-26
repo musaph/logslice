@@ -87,3 +87,23 @@ def test_run_count_zero_when_all_short(tmp_path):
     rc, out, _ = _run([str(p), "--width", "80", "--count"])
     assert rc == 0
     assert out.strip() == "0"
+
+
+def test_run_truncated_line_starts_with_original_prefix(plain_log):
+    """Truncated lines should begin with the original content up to --width."""
+    width = 20
+    rc, out, _ = _run([plain_log, "--width", str(width)])
+    assert rc == 0
+
+    # Read the original long line directly from the fixture file
+    original_long_line = (
+        "this is a much longer line that exceeds the default width limit "
+        "set for truncation purposes in the test"
+    )
+    for line in out.splitlines():
+        if len(line) == width:
+            # The truncated output must start with the first `width` chars
+            # (possibly minus a suffix), so at minimum the raw prefix is preserved.
+            assert original_long_line.startswith(line) or line.startswith(
+                original_long_line[:width]
+            ), f"Truncated line has unexpected prefix: {line!r}"
