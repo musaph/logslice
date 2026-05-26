@@ -51,6 +51,16 @@ def compute_histogram(
     lines: Iterable[str],
     interval: str = "minute",
 ) -> Histogram:
+    """Build a :class:`Histogram` by bucketing *lines* into time intervals.
+
+    Args:
+        lines: Iterable of raw log lines to process.
+        interval: Bucket size – one of ``"second"``, ``"minute"``,
+            ``"hour"``, or ``"day"``; defaults to ``"minute"``.
+
+    Returns:
+        A :class:`Histogram` with buckets sorted chronologically.
+    """
     seconds = _INTERVALS.get(interval, 60)
     hist = Histogram(interval_seconds=seconds)
     buckets: Dict[datetime, int] = {}
@@ -76,6 +86,15 @@ def compute_histogram(
 
 
 def format_histogram(hist: Histogram, bar_width: int = 40) -> Iterator[str]:
+    """Yield lines of an ASCII bar chart for *hist*.
+
+    Args:
+        hist: A :class:`Histogram` returned by :func:`compute_histogram`.
+        bar_width: Maximum width in characters for the bar portion.
+
+    Yields:
+        Formatted text lines suitable for printing to a terminal.
+    """
     if not hist.buckets:
         yield "(no timestamped lines found)"
         return
